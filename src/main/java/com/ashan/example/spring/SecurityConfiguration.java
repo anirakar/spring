@@ -1,10 +1,12 @@
 package com.ashan.example.spring;
 
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,7 +23,13 @@ public class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests((requests) -> requests.anyRequest().authenticated());
+        http.authorizeHttpRequests((requests) ->
+                requests.requestMatchers(PathRequest.toH2Console()).permitAll()
+                        .anyRequest().authenticated());
+        http.csrf(csrf -> csrf
+                .ignoringRequestMatchers(PathRequest.toH2Console())
+                .disable());
+        http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
         http.httpBasic(withDefaults());
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
